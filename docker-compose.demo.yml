@@ -1,0 +1,45 @@
+# docker-compose.demo.yml  --  demo only (reduced sample)
+# 
+# ISOLATION FROM THE MAIN SYSTEM:
+#   * volume:          graphdb_demo_data  (NEW - not your graphdb_data)
+#   * container names: graphdb_demo / dashboard_demo  (no clash)
+#   * ports:           7201 & 8502        (the main ones are 7200 & 8501)
+# This lets the demo run AT THE SAME TIME as the full system, without touching
+# the graphdb_data volume or your data.
+#
+# RUN (from the demo project folder):
+#   docker compose -f docker-compose.demo.yml up -d --build
+# OPEN:
+#   GraphDB Workbench  http://localhost:7201
+#   Dashboard          http://localhost:8502
+#
+# WARNING (destructive):  docker compose -f docker-compose.demo.yml down -v
+# deletes the graphdb_demo_data volume (demo only). It does NOT touch graphdb_data.
+
+services:
+  graphdb:
+    image: ontotext/graphdb:10.7.0
+    container_name: graphdb_demo
+    ports:
+      - "7201:7200"                          # host 7201 - container 7200
+    environment:
+      - GDB_HEAP_SIZE=1500M
+    volumes:
+      - graphdb_demo_data:/opt/graphdb/home  # separate, NEW volume
+
+  dashboard:
+    build: .
+    container_name: dashboard_demo
+    ports:
+      - "8502:8501"                          # host 8502 - container 8501
+    environment:
+      # The service name "graphdb" resolves on the compose internal network,
+      # so app.py needs no changes.
+      - SPARQL_ENDPOINT=http://graphdb:7200/repositories/thesis
+    depends_on:
+      - graphdb
+
+volumes:
+  graphdb_demo_data:
+    # Not external: created automatically on the first "up".
+    # The recipient does not need to run "docker volume create".

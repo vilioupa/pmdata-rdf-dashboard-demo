@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Generated RDF graphs (regenerate with: python main.py)
+rdf_output/
+*.backup
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

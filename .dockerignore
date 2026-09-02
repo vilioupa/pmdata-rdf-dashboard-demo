@@ -1,0 +1,14 @@
+# Python caches and notebook checkpoints
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Version control and virtual environments
+.git/
+venv/
+.venv/
+
+# Large data / generated output — not needed inside the image
+data/
+rdf_output/
+*.nt

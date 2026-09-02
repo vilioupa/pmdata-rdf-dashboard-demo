@@ -1,0 +1,159 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ex:   <http://example.org/thesis/> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# GENERAL SHAPE: every sosa:Observation must be complete
+
+ex:ObservationShape a sh:NodeShape ;
+    sh:targetClass sosa:Observation ;
+
+    sh:property [
+        sh:path sosa:hasFeatureOfInterest ;
+        sh:minCount 1 ;
+        sh:message "Κάθε παρατήρηση πρέπει να συνδέεται με έναν χρήστη (hasFeatureOfInterest)." ;
+    ] ;
+    sh:property [
+        sh:path sosa:observedProperty ;
+        sh:minCount 1 ;
+        sh:message "Κάθε παρατήρηση πρέπει να δηλώνει τι μετρά (observedProperty)." ;
+    ] ;
+    sh:property [
+        sh:path sosa:hasSimpleResult ;
+        sh:minCount 1 ;
+        sh:message "Κάθε παρατήρηση πρέπει να έχει τιμή (hasSimpleResult)." ;
+    ] ;
+    sh:property [
+        sh:path sosa:resultTime ;
+        sh:minCount 1 ;
+        sh:message "Κάθε παρατήρηση πρέπει να έχει χρονική σήμανση (resultTime)." ;
+    ] .
+
+
+# METRIC-SPECIFIC SHAPES (with sensible value ranges)
+# SPARQL targets must use FULL URIs (the ex: prefix is not available there)
+
+# --- Self-report scales 1-5 (PMSys, the official scale) ---
+# Lower bound is 1 (not 0), per the PMData documentation.
+# Any 0 values correspond to missing answers (missing-as-zero) and are
+# correctly reported as violations — that is the data-quality check working.
+ex:Scale1to5Shape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://www.w3.org/ns/sosa/observedProperty> ?p .
+                FILTER(?p IN (<http://example.org/thesis/Fatigue>,
+                              <http://example.org/thesis/Mood>,
+                              <http://example.org/thesis/SleepQuality>,
+                              <http://example.org/thesis/Soreness>,
+                              <http://example.org/thesis/Stress>))
+            }
+        """ ;
+    ] ;
+    sh:property [
+        sh:path sosa:hasSimpleResult ;
+        sh:minInclusive 1 ;
+        sh:maxInclusive 5 ;
+        sh:message "Οι μετρικές αυτοαναφοράς (Fatigue, Mood, SleepQuality, Soreness, Stress) πρέπει να είναι στο [1,5] κατά την τεκμηρίωση του PMData. Τιμή 0 υποδηλώνει ελλείπουσα απάντηση." ;
+    ] .
+
+# --- Readiness: a separate 0-10 scale (PMSys) ---
+ex:ReadinessShape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://www.w3.org/ns/sosa/observedProperty> <http://example.org/thesis/Readiness> .
+            }
+        """ ;
+    ] ;
+    sh:property [
+        sh:path sosa:hasSimpleResult ;
+        sh:minInclusive 0 ;
+        sh:maxInclusive 10 ;
+        sh:message "Η μετρική Readiness ακολουθεί κλίμακα [0,10] κατά την τεκμηρίωση του PMData, διαφορετική από τις υπόλοιπες αυτοαναφορές." ;
+    ] .
+
+# --- Percentage-style scores 0-100 ---
+ex:Score0to100Shape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://www.w3.org/ns/sosa/observedProperty> ?p .
+                FILTER(?p IN (<http://example.org/thesis/SleepScore>,
+                              <http://example.org/thesis/SleepEfficiency>))
+            }
+        """ ;
+    ] ;
+    sh:property [
+        sh:path sosa:hasSimpleResult ;
+        sh:minInclusive 0 ;
+        sh:maxInclusive 100 ;
+        sh:message "Οι βαθμολογίες (SleepScore, SleepEfficiency) πρέπει να είναι στο [0,100]." ;
+    ] .
+
+# --- Sleep minutes: non-negative and <= 1440 (minutes in a day) ---
+ex:SleepMinutesShape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://www.w3.org/ns/sosa/observedProperty> ?p .
+                FILTER(?p IN (<http://example.org/thesis/DeepSleepMinutes>,
+                              <http://example.org/thesis/RemSleepMinutes>,
+                              <http://example.org/thesis/LightSleepMinutes>,
+                              <http://example.org/thesis/WakeStageMinutes>,
+                              <http://example.org/thesis/MinutesAsleep>,
+                              <http://example.org/thesis/MinutesAwake>))
+            }
+        """ ;
+    ] ;
+    sh:property [
+        sh:path sosa:hasSimpleResult ;
+        sh:minInclusive 0 ;
+        sh:maxInclusive 1440 ;
+        sh:message "Τα λεπτά ύπνου πρέπει να είναι στο [0,1440]." ;
+    ] .
+
+# --- Heart rate: physiological range 20-220 ---
+ex:HeartRateShape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://www.w3.org/ns/sosa/observedProperty> ?p .
+                FILTER(?p IN (<http://example.org/thesis/HeartRate>,
+                              <http://example.org/thesis/RestingHeartRate>))
+            }
+        """ ;
+    ] ;
+    sh:property [
+        sh:path sosa:hasSimpleResult ;
+        sh:minInclusive 20 ;
+        sh:maxInclusive 220 ;
+        sh:message "Οι καρδιακοί παλμοί πρέπει να είναι σε φυσιολογικό εύρος [20,220]." ;
+    ] .
+
+# --- Non-negative magnitudes ---
+ex:NonNegativeShape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://www.w3.org/ns/sosa/observedProperty> ?p .
+                FILTER(?p IN (<http://example.org/thesis/StepCount>,
+                              <http://example.org/thesis/Calories>,
+                              <http://example.org/thesis/WaterGlasses>,
+                              <http://example.org/thesis/VeryActiveMinutes>,
+                              <http://example.org/thesis/SedentaryMinutes>,
+                              <http://example.org/thesis/BodyWeight>))
+            }
+        """ ;
+    ] ;
+    sh:property [
+        sh:path sosa:hasSimpleResult ;
+        sh:minInclusive 0 ;
+        sh:message "Το μέγεθος αυτό δεν μπορεί να είναι αρνητικό." ;
+    ] .
