@@ -527,6 +527,7 @@ elif page == "4. Ψυχολογία & Φυσιολογία":
                 st.plotly_chart(px.scatter(df_physio, x='DeepSleepMinutes', y='RestingHeartRate', color='User', color_discrete_map=USER_COLORS), use_container_width=True)
 
 elif page == "5. Εντοπισμός Ανωμαλιών (ML)":
+    # --- FIRST DETECTOR: sleep and resting heart rate anomalies ---
     st.subheader("Ανάλυση 5.1: Εντοπισμός Κινδύνου στον Ύπνο (Isolation Forest)")
     st.markdown("Μοντέλο Μηχανικής Μάθησης που εντοπίζει επικίνδυνες αποκλίσεις στον Βαθύ Ύπνο και τους Παλμούς Ηρεμίας.")
     
@@ -613,7 +614,7 @@ elif page == "5. Εντοπισμός Ανωμαλιών (ML)":
 
     # --- SECOND DETECTOR: activity-vs-heart-rate anomalies on the time series ---
     st.markdown("---")
-    st.subheader("Analyse 5.2: Ανίχνευση Στρες / Ασθένειας (Παλμοί vs Βήματα)")
+    st.subheader("Ανάλυση 5.2: Ανίχνευση Στρες / Ασθένειας (Παλμοί vs Βήματα)")
     st.markdown("Αυτός ο αλγόριθμος εξετάζει τα δεδομένα υψηλής συχνότητας (time-series). Ψάχνει για χρονικές στιγμές όπου οι παλμοί είναι αδικαιολόγητα υψηλοί σε σχέση με τη φυσική δραστηριότητα.")
 
     if user_filter == "Όλοι":
